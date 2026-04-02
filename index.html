@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mr. Longwell</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <a class="nav-logo" href="index.html">Mr. Longwell</a>
+    <ul class="nav-links">
+      <li><a href="index.html" class="active">Home</a></li>
+      <li><a href="cdl/index.html">CDL</a></li>
+      <li><a href="robotics/index.html">Robotics</a></li>
+      <li><a href="links/index.html">Links</a></li>
+    </ul>
+  </div>
+</nav>
+
+<main class="page">
+  <div class="page-header">
+    <h1>Mr. Longwell</h1>
+    <p>Lenape Technical School &mdash; Career &amp; Technical Education</p>
+  </div>
+
+  <div class="card-grid">
+    <a class="card" href="cdl/index.html">
+      <div class="card-label">Course</div>
+      <h2>CDL</h2>
+      <p>Commercial Driver's License — theory, resources, and permit preparation.</p>
+    </a>
+
+    <a class="card" href="robotics/index.html">
+      <div class="card-label">Course</div>
+      <h2>Robotics</h2>
+      <p>Robotics course materials and resources.</p>
+    </a>
+
+    <a class="card" href="links/index.html">
+      <div class="card-label">Resources</div>
+      <h2>Links</h2>
+      <p>Weather, news, science, and other useful links.</p>
+    </a>
+  </div>
+</main>
+
+<footer>
+  &copy; <span id="yr"></span> Mr. Longwell &mdash; Lenape Technical School
+</footer>
+<script>document.getElementById('yr').textContent = new Date().getFullYear();</script>
+
+</body>
+</html>
