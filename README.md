@@ -1,7 +1,7 @@
 [README.md](https://github.com/user-attachments/files/26436416/README.md)
 # mrlongwell.com — GitHub Pages Migration
 
-This repository hosts the replacement for [www.mrlongwell.com](https://www.mrlongwell.com), a career and technical education site for Lenape Technical School. The site is being built here first; the domain will be repointed once the migration is complete.
+This repository hosts the replacement for [www.mrlongwell.com](https://www.mrlongwell.com), a personal site for sharing information with my students at Lenape Technical School and beyond. The site is being built here first; the domain will be repointed once the migration is complete.
 
 Live preview: **https://eric15774.github.io**
 
