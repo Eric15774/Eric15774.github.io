@@ -7,10 +7,10 @@
   <link rel="stylesheet" href="../style.css" />
 </head>
 <body>
-
   <nav>
     <div class="nav-inner">
       <a class="nav-logo" href="../index.html">Mr. Longwell</a>
+      <button class="nav-toggle" aria-label="Open navigation" aria-expanded="false">&#9776;</button>
       <ul class="nav-links">
         <li><a href="../index.html">Home</a></li>
         <li><a href="index.html" class="active">CDL</a></li>
@@ -24,7 +24,7 @@
 
     <div class="page-header">
       <h1>CDL</h1>
-      <p>Commercial Driver's License — Class A Permit Preparation</p>
+      <p>Commercial Driver’s License — Class A Permit Preparation</p>
     </div>
 
     <section>
@@ -65,7 +65,14 @@
     &copy; <span id="yr"></span> Mr. Longwell — Lenape Technical School
   </footer>
 
-  <script>document.getElementById('yr').textContent = new Date().getFullYear();</script>
-
+  <script>
+    document.getElementById('yr').textContent = new Date().getFullYear();
+    document.querySelector('.nav-toggle').addEventListener('click', function () {
+      var links = document.querySelector('.nav-links');
+      var open = links.classList.toggle('open');
+      this.setAttribute('aria-expanded', open);
+      this.textContent = open ? '✕' : '☰';
+    });
+  </script>
 </body>
 </html>
