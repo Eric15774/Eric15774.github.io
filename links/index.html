@@ -11,6 +11,7 @@
   <nav>
     <div class="nav-inner">
       <a class="nav-logo" href="../index.html">Mr. Longwell</a>
+      <button class="nav-toggle" aria-label="Open navigation" aria-expanded="false">&#9776;</button>
       <ul class="nav-links">
         <li><a href="../index.html">Home</a></li>
         <li><a href="../cdl/index.html">CDL</a></li>
@@ -33,8 +34,8 @@
         <li><a href="https://www.nhc.noaa.gov/" target="_blank" rel="noopener">Hurricane Center</a></li>
         <li><a href="https://en.wikipedia.org/wiki/List_of_retired_Atlantic_hurricane_names" target="_blank" rel="noopener">Hurricane Data</a></li>
         <li><a href="https://www.weather.gov/" target="_blank" rel="noopener">National Weather Service</a></li>
-        <li><a href="http://forecast.weather.gov/MapClick.php?lat=40.694997555893565&lon=-79.34159612466061&site=all&smap=1" target="_blank" rel="noopener">Elderton Weather</a></li>
-        <li><a href="http://forecast.weather.gov/MapClick.php?lat=40.69500&lon=-79.34159612466061&unit=0&lg=english&FcstType=graphical" target="_blank" rel="noopener">Weather Graph</a></li>
+        <li><a href="http://forecast.weather.gov/MapClick.php?lat=40.694997555893565&amp;lon=-79.34159612466061&amp;site=all&amp;smap=1" target="_blank" rel="noopener">Elderton Weather</a></li>
+        <li><a href="http://forecast.weather.gov/MapClick.php?lat=40.69500&amp;lon=-79.34159612466061&amp;unit=0&amp;lg=english&amp;FcstType=graphical" target="_blank" rel="noopener">Weather Graph</a></li>
         <li><a href="https://waterdata.usgs.gov/monitoring-location/USGS-03036500/" target="_blank" rel="noopener">River Levels (Kittanning)</a></li>
         <li><a href="https://www.ncei.noaa.gov/products/paleoclimatology" target="_blank" rel="noopener">Paleoclimatology Data</a></li>
         <li><a href="http://climate.psu.edu/" target="_blank" rel="noopener">Pennsylvania Climate</a></li>
@@ -48,7 +49,7 @@
         <li><a href="https://www.weather.gov/pbz/" target="_blank" rel="noopener">Pittsburgh NWS</a></li>
         <li><a href="https://www.noaa.gov/jetstream" target="_blank" rel="noopener">NWS Online Weather School</a></li>
         <li><a href="https://www.aviationweather.gov/" target="_blank" rel="noopener">Aviation Weather</a></li>
-        <li><a href="http://weather.unisys.com/upper_air/skew/ua_sound.php?type=no&city=kpit&region=ne&t=cur&expanddiv=hide_bar" target="_blank" rel="noopener">Pittsburgh Sounding Chart</a></li>
+        <li><a href="http://weather.unisys.com/upper_air/skew/ua_sound.php?type=no&amp;city=kpit&amp;region=ne&amp;t=cur&amp;expanddiv=hide_bar" target="_blank" rel="noopener">Pittsburgh Sounding Chart</a></li>
         <li><a href="https://www.cocorahs.org/" target="_blank" rel="noopener">CoCoRaHs (Citizen Science)</a></li>
         <li><a href="https://earth.nullschool.net/" target="_blank" rel="noopener">Global Weather Mapping</a></li>
       </ul>
@@ -116,7 +117,15 @@
     &copy; <span id="yr"></span> Mr. Longwell — Lenape Technical School
   </footer>
 
-  <script>document.getElementById('yr').textContent = new Date().getFullYear();</script>
+  <script>
+    document.getElementById('yr').textContent = new Date().getFullYear();
+    document.querySelector('.nav-toggle').addEventListener('click', function () {
+      var links = document.querySelector('.nav-links');
+      var open = links.classList.toggle('open');
+      this.setAttribute('aria-expanded', open);
+      this.textContent = open ? '✕' : '☰';
+    });
+  </script>
 
 </body>
 </html>
