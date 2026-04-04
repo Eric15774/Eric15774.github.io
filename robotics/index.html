@@ -25,17 +25,19 @@
 
     <div class="page-header">
       <h1>Robotics</h1>
-      <p>Creative coding, industrial robots, APIs, and microprocessors.</p>
+      <p>Programming, automation, and electronics.</p>
     </div>
 
     <section>
       <h2>P5.js</h2>
       <div class="prose">
-        <p>P5.js is a JavaScript library for creative coding in the browser. Students use the online editor to draw, animate, and build interactive sketches — no installation required. The RGB color picker is especially useful for working with the <code>color()</code> function.</p>
+        <p>P5.js is a JavaScript library for creative coding. We use it to learn programming concepts through visual and interactive projects.</p>
       </div>
-      <ul class="link-list" style="margin-top:1rem">
+      <ul class="link-list">
+        <li><a href="p5js/assignments.html">Assignments</a></li>
+        <li><a href="p5js/resources.html">Resources</a></li>
         <li><a href="https://p5js.org/" target="_blank" rel="noopener">P5.js</a></li>
-        <li><a href="https://editor.p5js.org/" target="_blank" rel="noopener">P5.js Web Editor</a></li>
+        <li><a href="https://editor.p5js.org/" target="_blank" rel="noopener">P5.js Editor</a></li>
         <li><a href="https://www.rapidtables.com/web/color/RGB_Color.html" target="_blank" rel="noopener">RGB Color Picker</a></li>
       </ul>
     </section>
@@ -43,9 +45,11 @@
     <section>
       <h2>FANUC</h2>
       <div class="prose">
-        <p>Students learn to program and operate FANUC industrial robots. Topics include using the teach pendant, working with position registers, and writing basic motion instructions for pick-and-place and path operations.</p>
+        <p>FANUC is an industry-leading manufacturer of industrial robots. Students learn to program and operate FANUC robots used in manufacturing and automation.</p>
       </div>
-      <ul class="link-list" style="margin-top:1rem">
+      <ul class="link-list">
+        <li><a href="fanuc/assignments.html">Assignments</a></li>
+        <li><a href="fanuc/resources.html">Resources</a></li>
         <li><a href="https://www.fanucamerica.com/" target="_blank" rel="noopener">FANUC America</a></li>
       </ul>
     </section>
@@ -53,9 +57,11 @@
     <section>
       <h2>JSON &amp; APIs</h2>
       <div class="prose">
-        <p>Using Daniel Shiffman’s Coding Train tutorials, students learn to fetch live data from web APIs, parse JSON responses, and build sketches that respond to real-world data.</p>
+        <p>Working with data is an essential programming skill. We use Daniel Shiffman's Coding Train resources to explore JSON formatting and connecting to real-world APIs.</p>
       </div>
-      <ul class="link-list" style="margin-top:1rem">
+      <ul class="link-list">
+        <li><a href="json/assignments.html">Assignments</a></li>
+        <li><a href="json/resources.html">Resources</a></li>
         <li><a href="https://thecodingtrain.com/" target="_blank" rel="noopener">The Coding Train</a></li>
       </ul>
     </section>
@@ -63,9 +69,11 @@
     <section>
       <h2>Raspberry Pi Pico</h2>
       <div class="prose">
-        <p>An introduction to microprocessors using the Raspberry Pi Pico — a small, low-cost microcontroller. Students write MicroPython programs to control inputs and outputs, bridging the gap between software and physical hardware.</p>
+        <p>The Raspberry Pi Pico introduces students to microcontrollers and embedded systems. We explore programming hardware directly to control sensors, LEDs, and other components.</p>
       </div>
-      <ul class="link-list" style="margin-top:1rem">
+      <ul class="link-list">
+        <li><a href="pico/assignments.html">Assignments</a></li>
+        <li><a href="pico/resources.html">Resources</a></li>
         <li><a href="https://www.raspberrypi.com/products/raspberry-pi-pico/" target="_blank" rel="noopener">Raspberry Pi Pico</a></li>
       </ul>
     </section>
@@ -82,9 +90,9 @@
       var links = document.querySelector('.nav-links');
       var open = links.classList.toggle('open');
       this.setAttribute('aria-expanded', open);
-      this.textContent = open ? '✕' : '☰';
+      this.textContent = open ? '\u2715' : '\u2630';
     });
-  </script>
+  <\/script>
 
-</body>
-</html>
+<\/body>
+<\/html>
