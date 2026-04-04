@@ -21,14 +21,14 @@ body {
   background: var(--bg);
 }
 
-/* ── Navigation ── */
+/* Navigation */
 nav {
   position: sticky;
   top: 0;
   z-index: 100;
   background: var(--bg);
   border-bottom: 1px solid var(--border);
-  height: var(--nav-h);
+  min-height: var(--nav-h);
   display: flex;
   align-items: center;
 }
@@ -41,6 +41,9 @@ nav {
   display: flex;
   align-items: center;
   gap: 2rem;
+  flex-wrap: wrap;
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
 }
 
 .nav-logo {
@@ -74,14 +77,14 @@ nav {
   color: var(--accent);
 }
 
-/* ── Page layout ── */
+/* Page layout */
 .page {
   max-width: var(--max);
   margin: 0 auto;
   padding: 3rem 1.5rem 5rem;
 }
 
-/* ── Hero / page header ── */
+/* Hero / page header */
 .page-header {
   margin-bottom: 2.5rem;
   padding-bottom: 1.5rem;
@@ -102,7 +105,7 @@ nav {
   font-size: 15px;
 }
 
-/* ── Sections ── */
+/* Sections */
 section { margin-bottom: 2.5rem; }
 
 section h2 {
@@ -114,7 +117,7 @@ section h2 {
   margin-bottom: 0.75rem;
 }
 
-/* ── Link lists ── */
+/* Link lists */
 .link-list {
   list-style: none;
   display: flex;
@@ -127,7 +130,7 @@ section h2 {
   color: var(--accent);
   text-decoration: none;
   font-size: 15px;
-  padding: 3px 0;
+  padding: 6px 0;
   border-bottom: 1px solid transparent;
   transition: border-color 0.15s;
 }
@@ -136,7 +139,7 @@ section h2 {
   border-bottom-color: var(--accent);
 }
 
-/* ── Cards (home page) ── */
+/* Cards (home page) */
 .card-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -184,11 +187,11 @@ section h2 {
   line-height: 1.5;
 }
 
-/* ── Prose blocks ── */
+/* Prose blocks */
 .prose p { margin-bottom: 1rem; color: var(--muted); font-size: 15px; }
 .prose p:last-child { margin-bottom: 0; }
 
-/* ── Placeholder banner ── */
+/* Placeholder banner */
 .placeholder {
   border: 1.5px dashed var(--border);
   border-radius: 10px;
@@ -198,11 +201,30 @@ section h2 {
   font-size: 14px;
 }
 
-/* ── Utility ── */
+/* Utility */
 footer {
   border-top: 1px solid var(--border);
   text-align: center;
   padding: 1.5rem;
   font-size: 13px;
   color: var(--muted);
+}
+
+/* Mobile */
+@media (max-width: 600px) {
+  .nav-inner {
+    gap: 0.75rem;
+  }
+
+  .page {
+    padding: 2rem 1rem 3rem;
+  }
+
+  .page-header h1 {
+    font-size: 1.8rem;
+  }
+
+  .link-list li a {
+    padding: 8px 0;
+  }
 }
