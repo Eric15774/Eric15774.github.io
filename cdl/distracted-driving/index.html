@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Distracted Driving — CDL — Mr. Longwell</title>
+  <link rel="stylesheet" href="../../style.css" />
+</head>
+<body>
+  <nav>
+    <div class="nav-inner">
+      <a class="nav-logo" href="../../index.html">Mr. Longwell</a>
+      <button class="nav-toggle" aria-label="Open navigation" aria-expanded="false">&#9776;</button>
+      <ul class="nav-links">
+        <li><a href="../../index.html">Home</a></li>
+        <li><a href="../index.html" class="active">CDL</a></li>
+        <li><a href="../../robotics/index.html">Robotics</a></li>
+        <li><a href="../../links/index.html">Links</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <main class="page">
+
+    <a class="back-link" href="../index.html">&#8592; CDL</a>
+
+    <div class="page-header">
+      <h1>Distracted Driving</h1>
+      <p>Understanding the dangers and making responsible choices</p>
+    </div>
+
+    <section>
+      <h2>Safety Video</h2>
+      <div class="video-wrap">
+        <iframe
+          src="https://www.youtube.com/embed/Iq0fMfhGzMQ"
+          title="Distracted Driving Ends Here &mdash; Safety Video for CDL and Non-CDL Drivers"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowfullscreen>
+        </iframe>
+      </div>
+    </section>
+
+    <section>
+      <h2>Key Points</h2>
+      <div class="prose">
+        <p>Distracted driving is any activity that diverts attention from the primary task of driving. For CDL drivers, the stakes are significantly higher &mdash; a loaded tractor-trailer can weigh up to 80,000 lbs and takes much longer to stop than a passenger vehicle.</p>
+        <p>Under FMCSA regulations, commercial drivers are prohibited from texting or using a hand-held mobile device while operating a commercial motor vehicle. Violations can result in fines, disqualification, and out-of-service orders.</p>
+        <p>The three main types of distraction are: <strong>visual</strong> (taking your eyes off the road), <strong>manual</strong> (taking your hands off the wheel), and <strong>cognitive</strong> (taking your mind off driving). Texting combines all three.</p>
+      </div>
+    </section>
+
+    <section>
+      <h2>FMCSA Resources</h2>
+      <ul class="link-list">
+        <li><a href="https://www.fmcsa.dot.gov/safety/driver-safety/cmv-driving-tips-driver-distraction" target="_blank" rel="noopener">FMCSA &mdash; Driver Distraction</a></li>
+        <li><a href="https://www.fmcsa.dot.gov/regulations/distracted-driving" target="_blank" rel="noopener">FMCSA &mdash; Distracted Driving Regulations</a></li>
+      </ul>
+    </section>
+
+  </main>
+
+  <footer>
+    &copy; <span id="yr"></span> Mr. Longwell &mdash; Lenape Technical School
+  </footer>
+
+  <script>
+    document.getElementById('yr').textContent = new Date().getFullYear();
+    document.querySelector('.nav-toggle').addEventListener('click', function () {
+      var links = document.querySelector('.nav-links');
+      var open = links.classList.toggle('open');
+      this.setAttribute('aria-expanded', open);
+      this.textContent = open ? '✕' : '☰';
+    });
+  </script>
+</body>
+</html>
