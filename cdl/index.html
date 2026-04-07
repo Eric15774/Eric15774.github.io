@@ -24,8 +24,47 @@
 
     <div class="page-header">
       <h1>CDL</h1>
-      <p>Commercial Driver’s License — Class A Permit Preparation</p>
+      <p>Commercial Driver's License — Class A Permit Preparation</p>
     </div>
+
+    <section>
+      <h2>Pages</h2>
+      <div class="card-grid">
+        <a class="card" href="pre-trip/">
+          <div class="card-label">Reference</div>
+          <h2>Pre-Trip Script</h2>
+          <p>Full outside, in-cab, and air brake inspection walkthrough.</p>
+        </a>
+        <a class="card" href="dot-locations/">
+          <div class="card-label">Info</div>
+          <h2>Test Centers</h2>
+          <p>Local PennDOT Driver License Center locations and hours.</p>
+        </a>
+        <a class="card" href="links/">
+          <div class="card-label">Videos</div>
+          <h2>Video Library</h2>
+          <p>Curated YouTube videos organized by CDL topic.</p>
+        </a>
+        <a class="card" href="distracted-driving/">
+          <div class="card-label">Safety</div>
+          <h2>Distracted Driving</h2>
+          <p>Safety video on the dangers of distracted driving for CDL drivers.</p>
+        </a>
+      </div>
+    </section>
+
+    <section>
+      <h2>Study Resources</h2>
+      <ul class="link-list">
+        <li><a href="https://www.pa.gov/agencies/dmv/faqs/driver-licensing-faqs/commercial-drivers-license-faqs" target="_blank" rel="noopener">PennDOT CDL FAQ</a></li>
+        <li><a href="https://www.cristcdl.com/pennsylvania/pa-cdl-practice-tests/" target="_blank" rel="noopener">PA CDL Practice Tests (Crist CDL)</a></li>
+        <li><a href="https://play.google.com/store/apps/details?id=com.technonutty.cdlpracticetest&hl=en_US" target="_blank" rel="noopener">Google Play — CDL Practice Test</a></li>
+        <li><a href="https://play.google.com/store/apps/details?id=com.jeffreydiaz.android.app.cdlprep&hl=en_US" target="_blank" rel="noopener">Google Play — CDL Prep</a></li>
+        <li><a href="https://apps.apple.com/us/app/cdl-prep-test-by-coco/id1527903479" target="_blank" rel="noopener">App Store — CDL Prep Test by Coco</a></li>
+        <li><a href="https://apps.apple.com/us/app/cdl-prep/id1101536521" target="_blank" rel="noopener">App Store — CDL Prep</a></li>
+        <li><a href="https://docs.google.com/spreadsheets/d/11DUiiu67FgEb2UAH4o7m2YosjKvLJprjiYmfC1UAK18/edit?usp=sharing" target="_blank" rel="noopener">Course Calendar (T2)</a></li>
+      </ul>
+    </section>
 
     <section>
       <h2>Course Description</h2>
@@ -47,7 +86,7 @@
       <div class="prose">
         <p>Grading is based on total points accumulated during each trimester. The percentages for both trimesters will be averaged for a final grade. Points are earned through assessments, homework, and projects.</p>
         <p>Quizzes and homework collection may or may not be announced in advance. Makeup work must be completed using the days-missed equals days-to-complete equation.</p>
-        <p>92–100 A · 84–91 B · 77–83 C · 70–76 D</p>
+        <p>92–100 A &amp;nbsp;·&amp;nbsp; 84–91 B &amp;nbsp;·&amp;nbsp; 77–83 C &amp;nbsp;·&amp;nbsp; 70–76 D</p>
       </div>
     </section>
 
@@ -71,7 +110,7 @@
       var links = document.querySelector('.nav-links');
       var open = links.classList.toggle('open');
       this.setAttribute('aria-expanded', open);
-      this.textContent = open ? '✕' : '☰';
+      this.textContent = open ? '\u2715' : '\u2630';
     });
   </script>
 </body>
