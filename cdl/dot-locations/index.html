@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CDL Test Centers — Mr. Longwell</title>
+  <link rel="stylesheet" href="../../style.css" />
+</head>
+<body>
+  <nav>
+    <div class="nav-inner">
+      <a class="nav-logo" href="../../index.html">Mr. Longwell</a>
+      <button class="nav-toggle" aria-label="Open navigation" aria-expanded="false">&#9776;</button>
+      <ul class="nav-links">
+        <li><a href="../../index.html">Home</a></li>
+        <li><a href="../index.html" class="active">CDL</a></li>
+        <li><a href="../../robotics/index.html">Robotics</a></li>
+        <li><a href="../../links/index.html">Links</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <main class="page">
+
+    <a class="back-link" href="../index.html">&#8592; CDL</a>
+
+    <div class="page-header">
+      <h1>CDL Test Centers</h1>
+      <p>Local PennDOT Driver and Photo License Centers</p>
+    </div>
+
+    <section>
+      <h2>Nearby Locations</h2>
+
+      <div class="location">
+        <h3>Punxsutawney Driver and Photo License Center</h3>
+        <address>
+          Punxsutawney Plaza<br>
+          547 W. Mahoning St.<br>
+          Punxsutawney, PA 15767
+        </address>
+        <div class="hours">
+          <span>Monday</span>    <span>Closed</span>
+          <span>Tuesday</span>   <span>Closed</span>
+          <span>Wednesday</span> <span>Closed</span>
+          <span>Thursday</span>  <span>8:30 a.m. &ndash; 4:15 p.m.</span>
+          <span>Friday</span>    <span>8:30 a.m. &ndash; 4:15 p.m.</span>
+          <span>Saturday</span>  <span>8:30 a.m. &ndash; 4:15 p.m.</span>
+          <span>Sunday</span>    <span>Closed</span>
+        </div>
+      </div>
+
+      <div class="location">
+        <h3>Indiana Driver and Photo License Center</h3>
+        <address>
+          Indiana Mall<br>
+          2334 Oakland Ave.<br>
+          Indiana, PA 15701
+        </address>
+        <div class="hours">
+          <span>Hours</span> <span>Verify current hours with PennDOT before visiting.</span>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>PennDOT Resources</h2>
+      <ul class="link-list">
+        <li><a href="https://www.pa.gov/agencies/dmv/driver-licensing/find-a-photo-license-center.html" target="_blank" rel="noopener">Find a Driver License Center &mdash; PennDOT</a></li>
+        <li><a href="https://www.pa.gov/agencies/dmv/faqs/driver-licensing-faqs/commercial-drivers-license-faqs" target="_blank" rel="noopener">PennDOT CDL FAQ</a></li>
+      </ul>
+    </section>
+
+  </main>
+
+  <footer>
+    &copy; <span id="yr"></span> Mr. Longwell &mdash; Lenape Technical School
+  </footer>
+
+  <script>
+    document.getElementById('yr').textContent = new Date().getFullYear();
+    document.querySelector('.nav-toggle').addEventListener('click', function () {
+      var links = document.querySelector('.nav-links');
+      var open = links.classList.toggle('open');
+      this.setAttribute('aria-expanded', open);
+      this.textContent = open ? '✕' : '☰';
+    });
+  </script>
+</body>
+</html>
