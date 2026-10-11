@@ -1,0 +1,1108 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<style>body{margin:0;font-size:14px}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Gridwork</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: one-screen app. Top bar, toolbar, formula bar, scrolling grid, status bar. */
+:root {
+  --bg: #eef1f4;
+  --panel: #ffffff;
+  --head: #e5eaf0;
+  --head-sel: #cfdeea;
+  --line: #d6dce3;
+  --fg: #1b232c;
+  --muted: #5b6672;
+  --accent: #1d5f86;
+  --accent-fg: #ffffff;
+  --accent-soft: rgba(29, 95, 134, 0.11);
+  --err: #b3261e;
+  --font-ui: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  --row-h: 26px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #10151a; --panel: #161c22; --head: #1d252d; --head-sel: #24394a; --line: #2a333c;
+    --fg: #e2e8ee; --muted: #93a0ad; --accent: #6db2da; --accent-fg: #0d1a24;
+    --accent-soft: rgba(109, 178, 218, 0.16); --err: #ff8a80; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #10151a; --panel: #161c22; --head: #1d252d; --head-sel: #24394a; --line: #2a333c;
+  --fg: #e2e8ee; --muted: #93a0ad; --accent: #6db2da; --accent-fg: #0d1a24;
+  --accent-soft: rgba(109, 178, 218, 0.16); --err: #ff8a80; color-scheme: dark;
+}
+
+[hidden] { display: none !important; }
+html, body { height: 100%; }
+body {
+  background: var(--bg); color: var(--fg); font-family: var(--font-ui);
+  display: flex; flex-direction: column; overflow: hidden;
+  padding-inline: 16px; padding-block: 10px; box-sizing: border-box; gap: 8px;
+}
+button, input { font: inherit; color: inherit; }
+
+.topbar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.brand { font-weight: 600; letter-spacing: 0.02em; font-size: 13px; color: var(--accent); text-transform: uppercase; }
+#docName {
+  flex: 1 1 180px; min-width: 0; font-size: 17px; font-weight: 600; border: 1px solid transparent;
+  background: transparent; padding: 3px 6px; border-radius: 4px;
+}
+#docName:hover { border-color: var(--line); }
+#docName:focus { border-color: var(--accent); outline: none; background: var(--panel); }
+.files { display: flex; gap: 6px; flex-wrap: wrap; }
+
+.btn {
+  border: 1px solid var(--line); background: var(--panel); border-radius: 5px;
+  padding: 5px 10px; font-size: 13px; cursor: pointer; line-height: 1.2; white-space: nowrap;
+}
+.btn:hover { border-color: var(--accent); }
+.btn:focus-visible, .tool:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-fg); font-weight: 500; }
+
+.toolbar { display: flex; gap: 4px; flex-wrap: wrap; align-items: center; }
+.tool {
+  min-width: 32px; height: 30px; padding: 0 8px; border: 1px solid transparent; background: transparent;
+  border-radius: 5px; cursor: pointer; font-size: 13px;
+}
+.tool:hover { background: var(--panel); border-color: var(--line); }
+.tool[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); }
+.tool:disabled { opacity: 0.4; cursor: default; }
+.sep { width: 1px; height: 20px; background: var(--line); margin: 0 4px; }
+
+.fxbar { display: flex; gap: 6px; align-items: stretch; }
+#nameBox {
+  width: 76px; flex: none; text-align: center; font-family: var(--font-mono); font-size: 13px;
+  border: 1px solid var(--line); background: var(--panel); border-radius: 5px; padding: 5px;
+}
+.fxlabel { align-self: center; font-family: var(--font-mono); font-style: italic; color: var(--muted); font-size: 13px; }
+#fx {
+  flex: 1; min-width: 0; font-family: var(--font-mono); font-size: 13px; border: 1px solid var(--line);
+  background: var(--panel); border-radius: 5px; padding: 5px 8px;
+}
+#fx:focus, #nameBox:focus { outline: none; border-color: var(--accent); }
+
+.gridwrap {
+  flex: 1; min-height: 0; overflow: auto; position: relative; background: var(--panel);
+  border: 1px solid var(--line); border-radius: 6px; overscroll-behavior: contain;
+}
+table { border-collapse: separate; border-spacing: 0; table-layout: fixed; font-size: 13px; }
+th, td { height: var(--row-h); box-sizing: border-box; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+thead th {
+  position: sticky; top: 0; z-index: 2; background: var(--head); font-weight: 500; color: var(--muted);
+  font-size: 12px; user-select: none; position: sticky;
+}
+thead th .rz { position: absolute; right: -4px; top: 0; width: 8px; height: 100%; cursor: col-resize; z-index: 1; }
+tbody th {
+  position: sticky; left: 0; z-index: 1; background: var(--head); font-weight: 500; color: var(--muted);
+  font-size: 12px; text-align: center; user-select: none; font-variant-numeric: tabular-nums;
+}
+thead th.corner { left: 0; z-index: 3; }
+th.hl { background: var(--head-sel); color: var(--fg); }
+td {
+  padding: 0 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: cell;
+  font-variant-numeric: tabular-nums; scroll-margin: calc(var(--row-h) + 2px) 4px 4px 48px;
+  user-select: none;
+}
+td.n { text-align: right; }
+td.c { text-align: center; }
+td.b { font-weight: 600; }
+td.e { color: var(--err); text-align: center; font-family: var(--font-mono); font-size: 12px; }
+td.in { background: var(--accent-soft); }
+td.act { outline: 2px solid var(--accent); outline-offset: -2px; }
+
+#cellEditor {
+  position: absolute; z-index: 4; box-sizing: border-box; border: 2px solid var(--accent);
+  background: var(--panel); font-family: var(--font-mono); font-size: 13px; padding: 0 5px; outline: none;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.18);
+}
+
+.status {
+  display: flex; gap: 16px; flex-wrap: wrap; font-size: 12px; color: var(--muted);
+  font-variant-numeric: tabular-nums; min-height: 18px;
+}
+.status b { color: var(--fg); font-weight: 500; }
+#saveState { margin-left: auto; }
+#saveState.dirty::before { content: ""; display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: #c98a1b; margin-right: 6px; vertical-align: 1px; }
+
+.toast {
+  position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%);
+  background: var(--fg); color: var(--bg); padding: 8px 14px; border-radius: 6px; font-size: 13px; z-index: 20;
+  max-width: calc(100% - 32px);
+}
+.modal { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.4); display: grid; place-items: center; z-index: 30; padding: 16px; }
+.modal .card {
+  background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 16px;
+  width: min(640px, 100%); display: flex; flex-direction: column; gap: 10px; max-height: 90%;
+}
+.modal h2 { margin: 0; font-size: 16px; }
+.modal p { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.45; }
+.modal textarea {
+  width: 100%; min-height: 220px; box-sizing: border-box; font-family: var(--font-mono); font-size: 12px;
+  background: var(--bg); color: var(--fg); border: 1px solid var(--line); border-radius: 5px; padding: 8px; resize: vertical;
+}
+.modal .row { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
+.help code { font-family: var(--font-mono); font-size: 12px; background: var(--bg); padding: 1px 4px; border-radius: 3px; }
+.help ul { margin: 0; padding-left: 18px; font-size: 13px; line-height: 1.6; overflow: auto; }
+
+@media (max-width: 560px) {
+  .brand { display: none; }
+  #docName { font-size: 15px; }
+  .fxlabel { display: none; }
+  #nameBox { width: 58px; }
+  .sep { display: none; }
+  .tool { min-width: 30px; padding: 0 6px; }
+}
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
+</style>
+
+</head>
+<body>
+<div class="topbar">
+  <span class="brand">Gridwork</span>
+  <input id="docName" aria-label="Spreadsheet name" value="Monthly budget" spellcheck="false">
+  <div class="files">
+    <button class="btn" id="btnNew">New</button>
+    <button class="btn" id="btnOpen">Open</button>
+    <button class="btn primary" id="btnSave">Save JSON</button>
+    <button class="btn" id="btnCsv">Export CSV</button>
+    <button class="btn" id="btnHelp" aria-label="Formula help">?</button>
+  </div>
+  <input type="file" id="fileInput" accept=".json,.csv,.tsv,.txt,application/json,text/csv" hidden>
+</div>
+
+<div class="toolbar" role="toolbar" aria-label="Formatting">
+  <button class="tool" id="tUndo" title="Undo (Ctrl+Z)" aria-label="Undo">↶</button>
+  <button class="tool" id="tRedo" title="Redo (Ctrl+Y)" aria-label="Redo">↷</button>
+  <span class="sep"></span>
+  <button class="tool" id="tBold" title="Bold (Ctrl+B)" aria-pressed="false"><b>B</b></button>
+  <button class="tool" id="tCur" title="Currency" aria-pressed="false">$</button>
+  <button class="tool" id="tPct" title="Percent" aria-pressed="false">%</button>
+  <button class="tool" id="tNum" title="Two decimals" aria-pressed="false">0.00</button>
+  <span class="sep"></span>
+  <button class="tool" id="tLeft" title="Align left" aria-pressed="false">⇤</button>
+  <button class="tool" id="tCenter" title="Align center" aria-pressed="false">↔</button>
+  <button class="tool" id="tRight" title="Align right" aria-pressed="false">⇥</button>
+  <span class="sep"></span>
+  <button class="tool" id="tClear" title="Clear formatting">Clear format</button>
+</div>
+
+<div class="fxbar">
+  <input id="nameBox" aria-label="Cell address. Type an address and press Enter to jump" spellcheck="false">
+  <span class="fxlabel">fx</span>
+  <input id="fx" aria-label="Cell contents" spellcheck="false" autocomplete="off">
+</div>
+
+<div class="gridwrap" id="wrap">
+  <table id="grid"><colgroup id="cols"></colgroup><thead id="thead"></thead><tbody id="tbody"></tbody></table>
+  <input id="cellEditor" hidden spellcheck="false" autocomplete="off" aria-label="Edit cell">
+</div>
+
+<div class="status">
+  <span id="statSel"></span>
+  <span id="statCalc"></span>
+  <span id="saveState"></span>
+</div>
+
+<div class="toast" id="toast" hidden></div>
+<div class="modal" id="modal" hidden><div class="card" id="modalCard"></div></div>
+
+<script>
+(() => {
+"use strict";
+const NCOLS = 26, NROWS = 100, DEF_W = 96, ROWHEAD_W = 44;
+const $ = (id) => document.getElementById(id);
+
+// ---------- helpers ----------
+const colName = (c) => String.fromCharCode(65 + c);
+const cid = (r, c) => colName(c) + (r + 1);
+function parseId(id) {
+  const m = /^\$?([A-Z]{1,2})\$?(\d+)$/i.exec(id);
+  if (!m) return null;
+  const letters = m[1].toUpperCase();
+  let c = 0;
+  for (const ch of letters) c = c * 26 + (ch.charCodeAt(0) - 64);
+  return { r: parseInt(m[2], 10) - 1, c: c - 1 };
+}
+const inBounds = (p) => p && p.r >= 0 && p.r < NROWS && p.c >= 0 && p.c < NCOLS;
+
+// ---------- state ----------
+let cells = {};          // id -> {v: raw, b?, f?, a?}
+let widths = {};         // "A" -> px
+let values = {};         // id -> computed
+let undoStack = [], redoStack = [];
+let sel = { ar: 0, ac: 0, fr: 0, fc: 0 };
+let dirtySinceFile = false;
+let lastFileSave = null;
+
+// ---------- formula engine ----------
+class FErr { constructor(code) { this.code = code; } }
+const ERR = (c) => new FErr(c);
+
+function tokenize(src) {
+  const toks = []; let i = 0;
+  while (i < src.length) {
+    const s = src.slice(i), ch = src[i];
+    if (/\s/.test(ch)) { i++; continue; }
+    let m;
+    if ((m = /^(\d+\.?\d*|\.\d+)([eE][+-]?\d+)?/.exec(s))) { toks.push({ t: "num", v: parseFloat(m[0]) }); i += m[0].length; continue; }
+    if (ch === '"') {
+      let j = i + 1, out = "";
+      while (j < src.length) {
+        if (src[j] === '"') { if (src[j + 1] === '"') { out += '"'; j += 2; continue; } break; }
+        out += src[j++];
+      }
+      if (j >= src.length) throw ERR("#ERROR!");
+      toks.push({ t: "str", v: out }); i = j + 1; continue;
+    }
+    if ((m = /^\$?[A-Za-z]{1,2}\$?\d+(?![A-Za-z0-9_(])/.exec(s))) { toks.push({ t: "ref", v: m[0].replace(/\$/g, "").toUpperCase() }); i += m[0].length; continue; }
+    if ((m = /^[A-Za-z_][A-Za-z0-9_.]*/.exec(s))) { toks.push({ t: "id", v: m[0].toUpperCase() }); i += m[0].length; continue; }
+    if ((m = /^(<=|>=|<>)/.exec(s))) { toks.push({ t: "op", v: m[0] }); i += 2; continue; }
+    if ("+-*/^&=<>(),:%".includes(ch)) { toks.push({ t: "op", v: ch }); i++; continue; }
+    throw ERR("#ERROR!");
+  }
+  return toks;
+}
+
+function parse(src) {
+  const toks = tokenize(src); let p = 0;
+  const peek = () => toks[p], isOp = (v) => toks[p] && toks[p].t === "op" && toks[p].v === v;
+  const expect = (v) => { if (!isOp(v)) throw ERR("#ERROR!"); p++; };
+  function expr() { return comparison(); }
+  function comparison() {
+    let l = concat();
+    while (toks[p] && toks[p].t === "op" && ["=", "<>", "<", ">", "<=", ">="].includes(toks[p].v)) { const op = toks[p++].v; l = { t: "bin", op, l, r: concat() }; }
+    return l;
+  }
+  function concat() { let l = additive(); while (isOp("&")) { p++; l = { t: "bin", op: "&", l, r: additive() }; } return l; }
+  function additive() { let l = mult(); while (isOp("+") || isOp("-")) { const op = toks[p++].v; l = { t: "bin", op, l, r: mult() }; } return l; }
+  function mult() { let l = unary(); while (isOp("*") || isOp("/")) { const op = toks[p++].v; l = { t: "bin", op, l, r: unary() }; } return l; }
+  function unary() {
+    if (isOp("-")) { p++; return { t: "neg", x: unary() }; }
+    if (isOp("+")) { p++; return unary(); }
+    return power();
+  }
+  function power() { const b = postfix(); if (isOp("^")) { p++; return { t: "bin", op: "^", l: b, r: unary() }; } return b; }
+  function postfix() { let x = primary(); while (isOp("%")) { p++; x = { t: "pct", x }; } return x; }
+  function primary() {
+    const tk = peek(); if (!tk) throw ERR("#ERROR!");
+    if (tk.t === "num") { p++; return { t: "lit", v: tk.v }; }
+    if (tk.t === "str") { p++; return { t: "lit", v: tk.v }; }
+    if (tk.t === "ref") {
+      p++;
+      if (isOp(":")) { p++; const b = peek(); if (!b || b.t !== "ref") throw ERR("#ERROR!"); p++; return { t: "range", a: tk.v, b: b.v }; }
+      return { t: "ref", id: tk.v };
+    }
+    if (tk.t === "id") {
+      p++;
+      if (isOp("(")) {
+        p++; const args = [];
+        if (!isOp(")")) { args.push(expr()); while (isOp(",")) { p++; args.push(expr()); } }
+        expect(")"); return { t: "fn", name: tk.v, args };
+      }
+      if (tk.v === "TRUE" || tk.v === "FALSE") return { t: "lit", v: tk.v === "TRUE" };
+      throw ERR("#NAME?");
+    }
+    if (isOp("(")) { p++; const e = expr(); expect(")"); return e; }
+    throw ERR("#ERROR!");
+  }
+  const ast = expr();
+  if (p < toks.length) throw ERR("#ERROR!");
+  return ast;
+}
+
+const astCache = new Map();
+function getAst(src) {
+  if (astCache.has(src)) return astCache.get(src);
+  let a; try { a = parse(src); } catch (e) { a = { t: "err", e: e instanceof FErr ? e : ERR("#ERROR!") }; }
+  if (astCache.size > 2000) astCache.clear();
+  astCache.set(src, a); return a;
+}
+
+function toNum(v) {
+  if (v instanceof FErr) throw v;
+  if (typeof v === "number") return v;
+  if (v === "" || v == null) return 0;
+  if (typeof v === "boolean") return v ? 1 : 0;
+  const t = String(v).trim().replace(/,/g, "");
+  if (t !== "" && !isNaN(t)) return Number(t);
+  throw ERR("#VALUE!");
+}
+function toStr(v) {
+  if (v instanceof FErr) throw v;
+  if (typeof v === "number") return fmtGeneral(v);
+  if (typeof v === "boolean") return v ? "TRUE" : "FALSE";
+  return v == null ? "" : String(v);
+}
+function toBool(v) {
+  if (v instanceof FErr) throw v;
+  if (typeof v === "boolean") return v;
+  if (typeof v === "number") return v !== 0;
+  if (v === "") return false;
+  const u = String(v).toUpperCase();
+  if (u === "TRUE") return true; if (u === "FALSE") return false;
+  throw ERR("#VALUE!");
+}
+function checkNum(n) { if (!isFinite(n)) throw ERR("#NUM!"); return n; }
+
+function rangeVals(a, b) {
+  const pa = parseId(a), pb = parseId(b);
+  if (!inBounds(pa) || !inBounds(pb)) throw ERR("#REF!");
+  const out = [];
+  for (let r = Math.min(pa.r, pb.r); r <= Math.max(pa.r, pb.r); r++)
+    for (let c = Math.min(pa.c, pb.c); c <= Math.max(pa.c, pb.c); c++) out.push(getVal(cid(r, c)));
+  return out;
+}
+const flat = (args) => args.flatMap((a) => (Array.isArray(a) ? a : [a]));
+function nums(args) {
+  const out = [];
+  for (const a of args) {
+    if (Array.isArray(a)) { for (const x of a) { if (x instanceof FErr) throw x; if (typeof x === "number") out.push(x); } }
+    else out.push(toNum(a));
+  }
+  return out;
+}
+function scalar(v) { if (Array.isArray(v)) { if (v.length === 1) return v[0]; throw ERR("#VALUE!"); } return v; }
+
+function makeCriteria(crit) {
+  if (crit instanceof FErr) throw crit;
+  if (typeof crit === "number" || typeof crit === "boolean") return (x) => x === crit;
+  const m = /^(<=|>=|<>|<|>|=)?(.*)$/s.exec(String(crit));
+  const op = m[1] || "=", rhs = m[2];
+  const rn = rhs.trim() !== "" && !isNaN(rhs) ? Number(rhs) : null;
+  return (x) => {
+    if (x instanceof FErr) return false;
+    if (rn !== null && typeof x === "number") {
+      return { "=": x === rn, "<>": x !== rn, "<": x < rn, ">": x > rn, "<=": x <= rn, ">=": x >= rn }[op];
+    }
+    if (op === "=" ) return String(x).toLowerCase() === rhs.toLowerCase();
+    if (op === "<>") return String(x).toLowerCase() !== rhs.toLowerCase();
+    return false;
+  };
+}
+
+const FN = {
+  SUM: (a) => nums(a).reduce((s, x) => s + x, 0),
+  AVERAGE: (a) => { const n = nums(a); if (!n.length) throw ERR("#DIV/0!"); return n.reduce((s, x) => s + x, 0) / n.length; },
+  MIN: (a) => { const n = nums(a); return n.length ? Math.min(...n) : 0; },
+  MAX: (a) => { const n = nums(a); return n.length ? Math.max(...n) : 0; },
+  COUNT: (a) => flat(a).filter((x) => typeof x === "number").length,
+  COUNTA: (a) => flat(a).filter((x) => x !== "" && x != null).length,
+  ROUND: (a) => { const x = toNum(scalar(a[0])), d = a.length > 1 ? toNum(scalar(a[1])) : 0, f = Math.pow(10, d); return Math.round((x + Math.sign(x) * Number.EPSILON) * f) / f; },
+  ABS: (a) => Math.abs(toNum(scalar(a[0]))),
+  SQRT: (a) => { const x = toNum(scalar(a[0])); if (x < 0) throw ERR("#NUM!"); return Math.sqrt(x); },
+  POWER: (a) => checkNum(Math.pow(toNum(scalar(a[0])), toNum(scalar(a[1])))),
+  INT: (a) => Math.floor(toNum(scalar(a[0]))),
+  MOD: (a) => { const d = toNum(scalar(a[1])); if (d === 0) throw ERR("#DIV/0!"); const n = toNum(scalar(a[0])); return n - d * Math.floor(n / d); },
+  PI: () => Math.PI,
+  AND: (a) => flat(a).filter((x) => x !== "").every(toBool),
+  OR: (a) => flat(a).filter((x) => x !== "").some(toBool),
+  NOT: (a) => !toBool(scalar(a[0])),
+  CONCAT: (a) => flat(a).map(toStr).join(""),
+  LEN: (a) => toStr(scalar(a[0])).length,
+  UPPER: (a) => toStr(scalar(a[0])).toUpperCase(),
+  LOWER: (a) => toStr(scalar(a[0])).toLowerCase(),
+  TRIM: (a) => toStr(scalar(a[0])).trim().replace(/\s+/g, " "),
+  TODAY: () => new Date().toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" }),
+  COUNTIF: (a) => { const f = makeCriteria(scalar(a[1])); return (Array.isArray(a[0]) ? a[0] : [a[0]]).filter(f).length; },
+  SUMIF: (a) => {
+    const rng = Array.isArray(a[0]) ? a[0] : [a[0]], f = makeCriteria(scalar(a[1]));
+    const sumR = a.length > 2 ? (Array.isArray(a[2]) ? a[2] : [a[2]]) : rng;
+    let s = 0; rng.forEach((x, i) => { if (f(x)) { const y = sumR[i]; if (y instanceof FErr) throw y; if (typeof y === "number") s += y; } });
+    return s;
+  },
+};
+FN.AVG = FN.AVERAGE;
+
+function evalNode(n) {
+  switch (n.t) {
+    case "err": throw n.e;
+    case "lit": return n.v;
+    case "ref": { if (!inBounds(parseId(n.id))) throw ERR("#REF!"); const v = getVal(n.id); if (v instanceof FErr) throw v; return v; }
+    case "range": return rangeVals(n.a, n.b);
+    case "neg": return -toNum(scalar(evalNode(n.x)));
+    case "pct": return toNum(scalar(evalNode(n.x))) / 100;
+    case "fn": {
+      if (n.name === "IF") {
+        if (n.args.length < 2) throw ERR("#ERROR!");
+        const c = toBool(scalar(evalNode(n.args[0])));
+        if (c) return scalar(evalNode(n.args[1]));
+        return n.args.length > 2 ? scalar(evalNode(n.args[2])) : false;
+      }
+      if (n.name === "IFERROR") {
+        try { const v = scalar(evalNode(n.args[0])); if (v instanceof FErr) throw v; return v; }
+        catch (e) { if (e instanceof FErr) return n.args.length > 1 ? scalar(evalNode(n.args[1])) : ""; throw e; }
+      }
+      const f = FN[n.name]; if (!f) throw ERR("#NAME?");
+      return f(n.args.map(evalNode));
+    }
+    case "bin": {
+      const l = scalar(evalNode(n.l)), r = scalar(evalNode(n.r));
+      switch (n.op) {
+        case "+": return checkNum(toNum(l) + toNum(r));
+        case "-": return checkNum(toNum(l) - toNum(r));
+        case "*": return checkNum(toNum(l) * toNum(r));
+        case "/": { const d = toNum(r); if (d === 0) throw ERR("#DIV/0!"); return toNum(l) / d; }
+        case "^": return checkNum(Math.pow(toNum(l), toNum(r)));
+        case "&": return toStr(l) + toStr(r);
+        default: return compare(n.op, l, r);
+      }
+    }
+  }
+  throw ERR("#ERROR!");
+}
+function compare(op, l, r) {
+  if (l instanceof FErr) throw l; if (r instanceof FErr) throw r;
+  let a = l, b = r;
+  if (typeof a === "number" && b === "") b = 0;
+  if (typeof b === "number" && a === "") a = 0;
+  let c;
+  if (typeof a === "number" && typeof b === "number") c = a - b;
+  else { const x = toStr(a).toLowerCase(), y = toStr(b).toLowerCase(); c = x < y ? -1 : x > y ? 1 : 0; }
+  return { "=": c === 0, "<>": c !== 0, "<": c < 0, ">": c > 0, "<=": c <= 0, ">=": c >= 0 }[op];
+}
+
+const computing = new Set();
+function getVal(id) {
+  if (id in values) return values[id];
+  if (computing.has(id)) throw ERR("#CIRC!");
+  const cell = cells[id];
+  if (!cell || cell.v === "") return "";
+  computing.add(id);
+  let v;
+  try { v = computeRaw(cell.v); }
+  catch (e) { v = e instanceof FErr ? e : ERR("#ERROR!"); }
+  computing.delete(id);
+  values[id] = v;
+  return v;
+}
+function computeRaw(raw) {
+  if (raw.startsWith("=")) {
+    if (raw.length === 1) return "";
+    const v = scalar(evalNode(getAst(raw.slice(1))));
+    return v === undefined ? "" : v;
+  }
+  return literal(raw);
+}
+function literal(raw) {
+  const t = raw.trim();
+  if (/^[-+]?\$?-?(\d{1,3}(,\d{3})+|\d*)(\.\d+)?([eE][+-]?\d+)?$/.test(t) && /\d/.test(t)) {
+    const n = Number(t.replace(/[$,]/g, ""));
+    if (!isNaN(n)) return n;
+  }
+  if (/^[-+]?\d+(\.\d+)?%$/.test(t)) return parseFloat(t) / 100;
+  if (/^true$/i.test(t)) return true;
+  if (/^false$/i.test(t)) return false;
+  return raw;
+}
+function recalc() {
+  values = {}; computing.clear();
+  for (const id in cells) getVal(id);
+}
+
+// ---------- display ----------
+function fmtGeneral(v) {
+  if (Number.isInteger(v) && Math.abs(v) < 1e15) return String(v);
+  const s = String(Number(v.toPrecision(11)));
+  return s;
+}
+const nf2 = new Intl.NumberFormat(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+function display(v, cell) {
+  if (v instanceof FErr) return v.code;
+  if (typeof v === "boolean") return v ? "TRUE" : "FALSE";
+  if (typeof v === "number") {
+    const f = cell && cell.f;
+    if (f === "cur") return (v < 0 ? "-$" : "$") + nf2.format(Math.abs(v));
+    if (f === "pct") return Math.round(v * 1000) / 10 + "%";
+    if (f === "num") return nf2.format(v);
+    return fmtGeneral(v);
+  }
+  return v == null ? "" : String(v);
+}
+
+// ---------- grid build ----------
+const tdMap = [];
+function buildGrid() {
+  const colgroup = $("cols"), thead = $("thead"), tbody = $("tbody");
+  let cg = `<col style="width:${ROWHEAD_W}px">`;
+  for (let c = 0; c < NCOLS; c++) cg += `<col data-c="${c}">`;
+  colgroup.innerHTML = cg;
+  let h = `<tr><th class="corner" aria-label="Select all"></th>`;
+  for (let c = 0; c < NCOLS; c++) h += `<th data-c="${c}">${colName(c)}<span class="rz" data-rz="${c}"></span></th>`;
+  thead.innerHTML = h + "</tr>";
+  const frag = document.createDocumentFragment();
+  for (let r = 0; r < NROWS; r++) {
+    const tr = document.createElement("tr");
+    const th = document.createElement("th"); th.textContent = r + 1; th.dataset.r = r; tr.appendChild(th);
+    tdMap[r] = [];
+    for (let c = 0; c < NCOLS; c++) {
+      const td = document.createElement("td"); td.dataset.r = r; td.dataset.c = c;
+      tr.appendChild(td); tdMap[r][c] = td;
+    }
+    frag.appendChild(tr);
+  }
+  tbody.appendChild(frag);
+  applyWidths();
+}
+function applyWidths() {
+  const cols = $("cols").children;
+  let total = ROWHEAD_W;
+  for (let c = 0; c < NCOLS; c++) { const w = widths[colName(c)] || DEF_W; cols[c + 1].style.width = w + "px"; total += w; }
+  $("grid").style.width = total + "px";
+}
+function renderCells() {
+  for (let r = 0; r < NROWS; r++) for (let c = 0; c < NCOLS; c++) {
+    const id = cid(r, c), td = tdMap[r][c], cell = cells[id];
+    const v = cell ? values[id] : "";
+    const text = cell ? display(v, cell) : "";
+    if (td.textContent !== text) td.textContent = text;
+    let cls = "";
+    if (v instanceof FErr) cls = "e";
+    else {
+      const al = cell && cell.a;
+      if (al === "c") cls = "c"; else if (al === "r") cls = "n"; else if (al === "l") cls = "";
+      else if (typeof v === "number") cls = "n"; else if (typeof v === "boolean") cls = "c";
+    }
+    if (cell && cell.b) cls += " b";
+    td.className = cls.trim();
+    td.title = v instanceof FErr ? errHelp(v.code) : "";
+  }
+  renderSel();
+}
+function errHelp(code) {
+  return ({
+    "#DIV/0!": "Division by zero", "#REF!": "Reference outside the sheet", "#NAME?": "Unknown function or name",
+    "#VALUE!": "Wrong kind of value, such as text where a number is needed", "#CIRC!": "Circular reference: the formula depends on itself",
+    "#NUM!": "Result is not a valid number", "#ERROR!": "The formula could not be read",
+  })[code] || code;
+}
+
+// ---------- selection ----------
+const selRect = () => ({ r1: Math.min(sel.ar, sel.fr), r2: Math.max(sel.ar, sel.fr), c1: Math.min(sel.ac, sel.fc), c2: Math.max(sel.ac, sel.fc) });
+let prevSelTds = [];
+function renderSel() {
+  for (const el of prevSelTds) el.classList.remove("in", "act", "hl");
+  prevSelTds = [];
+  const { r1, r2, c1, c2 } = selRect();
+  const multi = r1 !== r2 || c1 !== c2;
+  if (multi) for (let r = r1; r <= r2; r++) for (let c = c1; c <= c2; c++) { const td = tdMap[r][c]; td.classList.add("in"); prevSelTds.push(td); }
+  const act = tdMap[sel.ar][sel.ac]; act.classList.add("act"); prevSelTds.push(act);
+  const heads = $("thead").rows[0].cells;
+  for (let c = c1; c <= c2; c++) { heads[c + 1].classList.add("hl"); prevSelTds.push(heads[c + 1]); }
+  const body = $("tbody").rows;
+  for (let r = r1; r <= r2; r++) { const th = body[r].cells[0]; th.classList.add("hl"); prevSelTds.push(th); }
+  const id = cid(sel.ar, sel.ac);
+  $("nameBox").value = multi ? `${cid(r1, c1)}:${cid(r2, c2)}` : id;
+  if (!editing) $("fx").value = cells[id] ? cells[id].v : "";
+  syncToolState();
+  renderStatus();
+}
+function renderStatus() {
+  const { r1, r2, c1, c2 } = selRect();
+  let count = 0, sum = 0, filled = 0;
+  for (let r = r1; r <= r2; r++) for (let c = c1; c <= c2; c++) {
+    const v = values[cid(r, c)];
+    if (v !== undefined && v !== "") filled++;
+    if (typeof v === "number") { count++; sum += v; }
+  }
+  const multi = r1 !== r2 || c1 !== c2;
+  $("statSel").innerHTML = multi ? `<b>${(r2 - r1 + 1) * (c2 - c1 + 1)}</b> cells, <b>${filled}</b> filled` : "";
+  $("statCalc").innerHTML = multi && count ? `Sum <b>${fmtGeneral(sum)}</b> &nbsp; Avg <b>${fmtGeneral(sum / count)}</b> &nbsp; Count <b>${count}</b>` : "";
+}
+function setSel(r, c, extend) {
+  r = Math.max(0, Math.min(NROWS - 1, r)); c = Math.max(0, Math.min(NCOLS - 1, c));
+  if (extend) { sel.fr = r; sel.fc = c; } else sel = { ar: r, ac: c, fr: r, fc: c };
+  renderSel();
+  const target = extend ? tdMap[sel.fr][sel.fc] : tdMap[r][c];
+  target.scrollIntoView({ block: "nearest", inline: "nearest" });
+}
+function syncToolState() {
+  const cell = cells[cid(sel.ar, sel.ac)] || {};
+  $("tBold").setAttribute("aria-pressed", !!cell.b);
+  $("tCur").setAttribute("aria-pressed", cell.f === "cur");
+  $("tPct").setAttribute("aria-pressed", cell.f === "pct");
+  $("tNum").setAttribute("aria-pressed", cell.f === "num");
+  $("tLeft").setAttribute("aria-pressed", cell.a === "l");
+  $("tCenter").setAttribute("aria-pressed", cell.a === "c");
+  $("tRight").setAttribute("aria-pressed", cell.a === "r");
+  $("tUndo").disabled = !undoStack.length; $("tRedo").disabled = !redoStack.length;
+}
+
+// ---------- mutations & history ----------
+const clone = (o) => (o ? JSON.parse(JSON.stringify(o)) : null);
+function normalize(cell) {
+  if (!cell) return null;
+  const out = { v: cell.v == null ? "" : String(cell.v) };
+  if (cell.b) out.b = true;
+  if (cell.f) out.f = cell.f;
+  if (cell.a) out.a = cell.a;
+  return out.v === "" && !out.b && !out.f && !out.a ? null : out;
+}
+function applyChanges(map, record = true) {
+  const diff = {};
+  for (const id in map) {
+    const before = clone(cells[id] || null), after = normalize(map[id]);
+    if (JSON.stringify(before) === JSON.stringify(after)) continue;
+    diff[id] = [before, after];
+    if (after) cells[id] = after; else delete cells[id];
+  }
+  if (!Object.keys(diff).length) return;
+  if (record) { undoStack.push(diff); if (undoStack.length > 200) undoStack.shift(); redoStack = []; }
+  changed();
+}
+function changed() {
+  recalc(); renderCells(); markDirty();
+}
+function undo() {
+  const d = undoStack.pop(); if (!d) return;
+  for (const id in d) { const b = d[id][0]; if (b) cells[id] = clone(b); else delete cells[id]; }
+  redoStack.push(d); changed(); toast("Undone");
+}
+function redo() {
+  const d = redoStack.pop(); if (!d) return;
+  for (const id in d) { const a = d[id][1]; if (a) cells[id] = clone(a); else delete cells[id]; }
+  undoStack.push(d); changed();
+}
+function replaceAll(newCells, newWidths, name) {
+  const map = {};
+  for (const id of new Set([...Object.keys(cells), ...Object.keys(newCells)])) map[id] = newCells[id] || null;
+  widths = newWidths || {};
+  applyWidths();
+  if (name != null) $("docName").value = name;
+  applyChanges(map);
+  markDirty(); renderCells();
+}
+function forSel(fn) {
+  const { r1, r2, c1, c2 } = selRect(), map = {};
+  for (let r = r1; r <= r2; r++) for (let c = c1; c <= c2; c++) { const id = cid(r, c); map[id] = fn(clone(cells[id]) || { v: "" }); }
+  applyChanges(map);
+}
+function toggleFmt(key, val) {
+  const cur = (cells[cid(sel.ar, sel.ac)] || {})[key];
+  const next = cur === val ? undefined : val;
+  forSel((c) => { if (next === undefined) delete c[key]; else c[key] = next; return c; });
+}
+
+// ---------- editing ----------
+let editing = false, editSource = null; // "cell" | "fx"
+const ed = $("cellEditor"), fx = $("fx");
+function positionEditor() {
+  const td = tdMap[sel.ar][sel.ac];
+  ed.style.left = td.offsetLeft + "px"; ed.style.top = td.offsetTop + "px";
+  ed.style.minWidth = td.offsetWidth + "px"; ed.style.height = td.offsetHeight + "px";
+  ed.style.width = Math.max(td.offsetWidth, Math.min(420, (ed.value.length + 2) * 8)) + "px";
+}
+function startEdit(initial, src = "cell") {
+  const id = cid(sel.ar, sel.ac);
+  editing = true; editSource = src;
+  const text = initial != null ? initial : (cells[id] ? cells[id].v : "");
+  ed.value = text; fx.value = text;
+  if (src === "cell") {
+    ed.hidden = false; positionEditor(); ed.focus();
+    ed.setSelectionRange(text.length, text.length);
+  }
+}
+function commitEdit(dr = 0, dc = 0) {
+  if (!editing) return;
+  const text = editSource === "cell" ? ed.value : fx.value;
+  const id = cid(sel.ar, sel.ac);
+  editing = false; ed.hidden = true;
+  const cell = clone(cells[id]) || { v: "" };
+  cell.v = text;
+  const t = text.trim();
+  if (!cell.f) {
+    if (/^-?\$[\d,]*\.?\d+$/.test(t) || /^\$-[\d,]*\.?\d+$/.test(t)) cell.f = "cur";
+    else if (/^[-+]?\d+(\.\d+)?%$/.test(t)) cell.f = "pct";
+  }
+  applyChanges({ [id]: cell });
+  if (dr || dc) setSel(sel.ar + dr, sel.ac + dc); else renderSel();
+  if (document.activeElement === ed || document.activeElement === fx) document.activeElement.blur();
+  $("wrap").focus({ preventScroll: true });
+}
+function cancelEdit() {
+  editing = false; ed.hidden = true;
+  renderSel(); $("wrap").focus({ preventScroll: true });
+}
+ed.addEventListener("input", () => { fx.value = ed.value; positionEditor(); });
+fx.addEventListener("focus", () => { if (!editing) startEdit(null, "fx"); else editSource = "fx"; });
+fx.addEventListener("input", () => { if (!editing) startEdit(fx.value, "fx"); ed.value = fx.value; });
+function editorKeys(e) {
+  if (e.key === "Enter") { e.preventDefault(); commitEdit(e.shiftKey ? -1 : 1, 0); }
+  else if (e.key === "Tab") { e.preventDefault(); commitEdit(0, e.shiftKey ? -1 : 1); }
+  else if (e.key === "Escape") { e.preventDefault(); cancelEdit(); }
+  else if (editSource === "cell" && !isFormulaEditing() && ["ArrowUp", "ArrowDown"].includes(e.key)) {
+    e.preventDefault(); commitEdit(e.key === "ArrowUp" ? -1 : 1, 0);
+  }
+}
+ed.addEventListener("keydown", editorKeys);
+fx.addEventListener("keydown", editorKeys);
+ed.addEventListener("blur", () => { setTimeout(() => { if (editing && editSource === "cell" && document.activeElement !== fx && document.activeElement !== ed && !pointing) commitEdit(); }, 0); });
+fx.addEventListener("blur", () => { setTimeout(() => { if (editing && editSource === "fx" && document.activeElement !== ed && document.activeElement !== fx && !pointing) commitEdit(); }, 0); });
+const isFormulaEditing = () => editing && (editSource === "cell" ? ed.value : fx.value).startsWith("=");
+
+// click a cell while typing a formula to insert its address
+let pointing = false;
+function insertRef(text) {
+  const inp = editSource === "cell" ? ed : fx;
+  const s = inp.selectionStart ?? inp.value.length, e = inp.selectionEnd ?? s;
+  inp.value = inp.value.slice(0, s) + text + inp.value.slice(e);
+  inp.setSelectionRange(s + text.length, s + text.length);
+  if (inp === ed) fx.value = ed.value; else ed.value = fx.value;
+  if (!ed.hidden) positionEditor();
+}
+
+// ---------- pointer on grid ----------
+let dragging = false, lastTap = { id: null, t: 0 };
+const tbody = $("tbody");
+tbody.addEventListener("pointerdown", (e) => {
+  const td = e.target.closest("td"); const th = e.target.closest("th");
+  if (th && th.dataset.r) { if (editing) commitEdit(); sel = { ar: +th.dataset.r, ac: 0, fr: +th.dataset.r, fc: NCOLS - 1 }; renderSel(); return; }
+  if (!td) return;
+  const r = +td.dataset.r, c = +td.dataset.c;
+  if (isFormulaEditing() && !(r === sel.ar && c === sel.ac)) {
+    e.preventDefault(); pointing = true; insertRef(cid(r, c));
+    setTimeout(() => { pointing = false; (editSource === "cell" ? ed : fx).focus(); }, 0);
+    return;
+  }
+  if (editing) commitEdit();
+  if (e.pointerType === "mouse") {
+    e.preventDefault();
+    $("wrap").focus({ preventScroll: true });
+    setSel(r, c, e.shiftKey); dragging = true;
+  } else {
+    const id = cid(r, c), now = Date.now();
+    if (lastTap.id === id && now - lastTap.t < 700 && sel.ar === r && sel.ac === c) { startEdit(null, "fx"); fx.focus(); }
+    else setSel(r, c, false);
+    lastTap = { id, t: now };
+  }
+});
+tbody.addEventListener("pointerover", (e) => {
+  if (!dragging) return; const td = e.target.closest("td"); if (!td) return;
+  setSel(+td.dataset.r, +td.dataset.c, true);
+});
+window.addEventListener("pointerup", () => { dragging = false; });
+tbody.addEventListener("dblclick", (e) => { const td = e.target.closest("td"); if (td && !editing) { setSel(+td.dataset.r, +td.dataset.c); startEdit(null, "cell"); } });
+
+$("thead").addEventListener("pointerdown", (e) => {
+  const rz = e.target.closest(".rz");
+  if (rz) {
+    e.preventDefault(); e.stopPropagation();
+    const c = +rz.dataset.rz, key = colName(c), startX = e.clientX, startW = widths[key] || DEF_W;
+    const move = (ev) => { widths[key] = Math.max(36, Math.round(startW + ev.clientX - startX)); applyWidths(); if (editing) positionEditor(); };
+    const up = () => { window.removeEventListener("pointermove", move); window.removeEventListener("pointerup", up); markDirty(); };
+    window.addEventListener("pointermove", move); window.addEventListener("pointerup", up);
+    return;
+  }
+  const th = e.target.closest("th"); if (!th) return;
+  if (editing) commitEdit();
+  if (th.classList.contains("corner")) sel = { ar: 0, ac: 0, fr: NROWS - 1, fc: NCOLS - 1 };
+  else { const c = +th.dataset.c; sel = { ar: 0, ac: c, fr: NROWS - 1, fc: c }; }
+  renderSel();
+});
+
+// ---------- keyboard ----------
+const wrap = $("wrap"); wrap.tabIndex = 0;
+document.addEventListener("keydown", (e) => {
+  const tgt = e.target;
+  const inOtherInput = tgt !== wrap && tgt !== document.body;
+  const mod = e.ctrlKey || e.metaKey;
+  if (mod && e.key.toLowerCase() === "s") { e.preventDefault(); if (editing) commitEdit(); saveJson(); return; }
+  if (inOtherInput || editing || !$("modal").hidden) return;
+  if (mod) {
+    const k = e.key.toLowerCase();
+    if (k === "z" && !e.shiftKey) { e.preventDefault(); undo(); }
+    else if (k === "y" || (k === "z" && e.shiftKey)) { e.preventDefault(); redo(); }
+    else if (k === "b") { e.preventDefault(); toggleFmt("b", true); }
+    else if (k === "a") { e.preventDefault(); sel = { ar: 0, ac: 0, fr: NROWS - 1, fc: NCOLS - 1 }; renderSel(); }
+    return;
+  }
+  const moves = { ArrowUp: [-1, 0], ArrowDown: [1, 0], ArrowLeft: [0, -1], ArrowRight: [0, 1] };
+  if (moves[e.key]) {
+    e.preventDefault(); const [dr, dc] = moves[e.key];
+    if (e.shiftKey) setSel(sel.fr + dr, sel.fc + dc, true); else setSel(sel.ar + dr, sel.ac + dc);
+  } else if (e.key === "Tab") { e.preventDefault(); setSel(sel.ar, sel.ac + (e.shiftKey ? -1 : 1)); }
+  else if (e.key === "Enter" || e.key === "F2") { e.preventDefault(); startEdit(null, "cell"); }
+  else if (e.key === "Delete" || e.key === "Backspace") { e.preventDefault(); forSel((c) => { c.v = ""; return c; }); }
+  else if (e.key === "Home") { e.preventDefault(); setSel(sel.ar, 0); }
+  else if (e.key === "Escape") { setSel(sel.ar, sel.ac); }
+  else if (e.key.length === 1 && !e.altKey) { e.preventDefault(); startEdit(e.key, "cell"); }
+});
+
+// ---------- clipboard ----------
+let internalClip = null;
+function selectionText() {
+  const { r1, r2, c1, c2 } = selRect(), lines = [], raw = [];
+  for (let r = r1; r <= r2; r++) {
+    const row = [], rrow = [];
+    for (let c = c1; c <= c2; c++) { const id = cid(r, c); row.push(cells[id] ? display(values[id], cells[id]) : ""); rrow.push(clone(cells[id])); }
+    lines.push(row.join("\t")); raw.push(rrow);
+  }
+  return { text: lines.join("\n"), raw, r1, c1 };
+}
+function onCopy(e, cut) {
+  if (editing || (e.target && e.target !== wrap && e.target !== document.body && /INPUT|TEXTAREA/.test(e.target.tagName))) return;
+  const s = selectionText();
+  e.clipboardData.setData("text/plain", s.text); e.preventDefault();
+  internalClip = s;
+  if (cut) forSel((c) => { c.v = ""; return c; });
+  toast(cut ? "Cut" : "Copied");
+}
+document.addEventListener("copy", (e) => onCopy(e, false));
+document.addEventListener("cut", (e) => onCopy(e, true));
+document.addEventListener("paste", (e) => {
+  if (editing || (e.target && e.target !== wrap && e.target !== document.body && /INPUT|TEXTAREA/.test(e.target.tagName))) return;
+  const text = e.clipboardData.getData("text/plain"); if (!text) return;
+  e.preventDefault();
+  const map = {};
+  if (internalClip && text === internalClip.text) {
+    const dr = sel.ar - internalClip.r1, dc = sel.ac - internalClip.c1;
+    internalClip.raw.forEach((row, i) => row.forEach((cell, j) => {
+      const r = sel.ar + i, c = sel.ac + j; if (r >= NROWS || c >= NCOLS) return;
+      const nc = clone(cell); if (nc) nc.v = shiftRefs(nc.v, dr, dc);
+      map[cid(r, c)] = nc;
+    }));
+  } else {
+    const rows = text.includes("\t") ? text.replace(/\r/g, "").replace(/\n$/, "").split("\n").map((l) => l.split("\t")) : parseCsv(text);
+    rows.forEach((row, i) => row.forEach((v, j) => {
+      const r = sel.ar + i, c = sel.ac + j; if (r >= NROWS || c >= NCOLS) return;
+      const nc = clone(cells[cid(r, c)]) || {}; nc.v = v; map[cid(r, c)] = nc;
+    }));
+  }
+  applyChanges(map);
+});
+function shiftRefs(raw, dr, dc) {
+  if (!raw || !raw.startsWith("=")) return raw;
+  return raw.split('"').map((part, i) => i % 2 ? part : part.replace(/(^|[^A-Za-z0-9_$])(\$?)([A-Za-z]{1,2})(\$?)(\d+)(?![A-Za-z0-9_(])/g,
+    (m, pre, d1, col, d2, row) => {
+      const p = parseId(col + row); if (!p) return m;
+      const c = d1 ? p.c : p.c + dc, r = d2 ? p.r : p.r + dr;
+      if (c < 0 || c >= NCOLS || r < 0 || r >= NROWS) return pre + "#REF!";
+      return pre + d1 + colName(c) + d2 + (r + 1);
+    })).join('"');
+}
+
+// ---------- CSV ----------
+function parseCsv(text) {
+  const rows = []; let row = [], f = "", q = false;
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (q) { if (ch === '"') { if (text[i + 1] === '"') { f += '"'; i++; } else q = false; } else f += ch; }
+    else if (ch === '"') q = true;
+    else if (ch === ",") { row.push(f); f = ""; }
+    else if (ch === "\n" || ch === "\r") { if (ch === "\r" && text[i + 1] === "\n") i++; row.push(f); rows.push(row); row = []; f = ""; }
+    else f += ch;
+  }
+  if (f !== "" || row.length) { row.push(f); rows.push(row); }
+  return rows;
+}
+function usedBounds() {
+  let mr = -1, mc = -1;
+  for (const id in cells) { const p = parseId(id); if (cells[id].v !== "") { mr = Math.max(mr, p.r); mc = Math.max(mc, p.c); } }
+  return { mr, mc };
+}
+function toCsv() {
+  const { mr, mc } = usedBounds(), lines = [];
+  for (let r = 0; r <= mr; r++) {
+    const row = [];
+    for (let c = 0; c <= mc; c++) {
+      const id = cid(r, c); let v = cells[id] ? values[id] : "";
+      let s = v instanceof FErr ? v.code : typeof v === "number" ? fmtGeneral(v) : typeof v === "boolean" ? (v ? "TRUE" : "FALSE") : String(v ?? "");
+      if (/[",\n\r]/.test(s)) s = '"' + s.replace(/"/g, '""') + '"';
+      row.push(s);
+    }
+    lines.push(row.join(","));
+  }
+  return lines.join("\r\n") + "\r\n";
+}
+
+// ---------- JSON file format ----------
+function toJson() {
+  const sorted = {};
+  Object.keys(cells).sort((a, b) => { const pa = parseId(a), pb = parseId(b); return pa.r - pb.r || pa.c - pb.c; }).forEach((id) => (sorted[id] = cells[id]));
+  return JSON.stringify({
+    app: "Gridwork", version: 1, name: docName(), savedAt: new Date().toISOString(),
+    columnWidths: widths, cells: sorted,
+  }, null, 2);
+}
+function fromJson(text) {
+  const data = JSON.parse(text);
+  if (!data || typeof data !== "object" || typeof data.cells !== "object") throw new Error("This JSON file has no \"cells\" section, so it is not a Gridwork sheet.");
+  const out = {};
+  for (const id in data.cells) {
+    const p = parseId(id); if (!inBounds(p)) continue;
+    const c = data.cells[id];
+    out[cid(p.r, p.c)] = typeof c === "object" && c !== null ? c : { v: String(c) };
+  }
+  const w = {};
+  for (const k in data.columnWidths || {}) { const n = Number(data.columnWidths[k]); if (/^[A-Z]$/.test(k) && n >= 36 && n <= 1200) w[k] = n; }
+  return { cells: out, widths: w, name: typeof data.name === "string" ? data.name : null };
+}
+const docName = () => ($("docName").value.trim() || "Untitled sheet");
+const safeFile = () => docName().replace(/[\\/:*?"<>|]+/g, "-").slice(0, 80);
+
+let dl = null;
+(async () => { try { dl = window.claude && window.claude.use ? await window.claude.use("downloads") : null; } catch { dl = null; } })();
+
+function browserDownload(filename, data) {
+  const type = /\.json$/.test(filename) ? "application/json" : "text/csv";
+  const url = URL.createObjectURL(new Blob([data], { type }));
+  const a = document.createElement("a"); a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 4000);
+}
+async function offerFile(filename, data, label) {
+  if (!window.claude) { try { browserDownload(filename, data); return true; } catch {} }
+  if (dl) {
+    try { await dl.save({ filename, data }); return true; }
+    catch (err) {
+      if (err && err.code === "declined") { toast("Save cancelled"); return false; }
+      if (err && err.code === "rate_limited") { toast("A save prompt is already open"); return false; }
+    }
+  }
+  showTextModal(label, data, filename);
+  return false;
+}
+async function saveJson() {
+  const ok = await offerFile(safeFile() + ".json", toJson(), "Sheet as JSON");
+  if (ok) { dirtySinceFile = false; lastFileSave = new Date(); renderSaveState(); toast("Saved " + safeFile() + ".json"); }
+}
+
+// ---------- autosave (this browser only) ----------
+const AUTO_KEY = "gridwork.autosave.v1";
+let autoTimer = null;
+function markDirty() { dirtySinceFile = true; renderSaveState(); syncToolState(); clearTimeout(autoTimer); autoTimer = setTimeout(autosave, 600); }
+function autosave() {
+  try { localStorage.setItem(AUTO_KEY, JSON.stringify({ name: docName(), widths, cells, dirty: dirtySinceFile, lastFileSave: lastFileSave && lastFileSave.toISOString() })); } catch {}
+}
+function renderSaveState() {
+  const el = $("saveState");
+  el.classList.toggle("dirty", dirtySinceFile);
+  el.textContent = dirtySinceFile ? "Changes not saved to a file" :
+    lastFileSave ? "Saved to file " + lastFileSave.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }) : "No changes";
+}
+$("docName").addEventListener("input", markDirty);
+$("docName").addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); wrap.focus(); } });
+
+// ---------- toolbar & file buttons ----------
+document.querySelector(".toolbar").addEventListener("pointerdown", (e) => { if (e.target.closest(".tool")) e.preventDefault(); });
+$("tUndo").onclick = undo; $("tRedo").onclick = redo;
+$("tBold").onclick = () => toggleFmt("b", true);
+$("tCur").onclick = () => toggleFmt("f", "cur");
+$("tPct").onclick = () => toggleFmt("f", "pct");
+$("tNum").onclick = () => toggleFmt("f", "num");
+$("tLeft").onclick = () => toggleFmt("a", "l");
+$("tCenter").onclick = () => toggleFmt("a", "c");
+$("tRight").onclick = () => toggleFmt("a", "r");
+$("tClear").onclick = () => forSel((c) => ({ v: c.v }));
+$("btnSave").onclick = saveJson;
+$("btnCsv").onclick = () => offerFile(safeFile() + ".csv", toCsv(), "Sheet as CSV");
+$("btnNew").onclick = () => { replaceAll({}, {}, "Untitled sheet"); setSel(0, 0); toast("New sheet. Ctrl+Z brings the old one back."); };
+$("btnOpen").onclick = () => $("fileInput").click();
+$("fileInput").addEventListener("change", async (e) => {
+  const file = e.target.files[0]; e.target.value = ""; if (!file) return;
+  try {
+    const text = await file.text(), base = file.name.replace(/\.[^.]+$/, "");
+    if (/\.json$/i.test(file.name) || /^\s*\{/.test(text)) {
+      const d = fromJson(text); replaceAll(d.cells, d.widths, d.name || base);
+    } else {
+      const rows = /\.tsv$/i.test(file.name) ? text.replace(/\r/g, "").split("\n").map((l) => l.split("\t")) : parseCsv(text);
+      const out = {}; rows.forEach((row, r) => row.forEach((v, c) => { if (r < NROWS && c < NCOLS && v !== "") out[cid(r, c)] = { v }; }));
+      replaceAll(out, {}, base);
+    }
+    dirtySinceFile = false; lastFileSave = null; renderSaveState(); autosave();
+    setSel(0, 0); toast("Opened " + file.name);
+  } catch (err) { showMessage("Could not open that file", (err && err.message) || "The file could not be read. Check that it is a Gridwork JSON file or a CSV."); }
+});
+$("btnHelp").onclick = showHelp;
+
+$("nameBox").addEventListener("keydown", (e) => {
+  if (e.key !== "Enter") return; e.preventDefault();
+  const [a, b] = $("nameBox").value.trim().split(":"); const pa = parseId(a || ""), pb = b ? parseId(b) : null;
+  if (!inBounds(pa)) { toast("Type an address like B7"); renderSel(); return; }
+  sel = { ar: pa.r, ac: pa.c, fr: pa.r, fc: pa.c };
+  if (inBounds(pb)) { sel.fr = pb.r; sel.fc = pb.c; }
+  renderSel(); tdMap[pa.r][pa.c].scrollIntoView({ block: "nearest", inline: "nearest" }); wrap.focus({ preventScroll: true });
+});
+
+// ---------- toast & modals ----------
+let toastTimer;
+function toast(msg) { const t = $("toast"); t.textContent = msg; t.hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(() => (t.hidden = true), 2200); }
+function openModal(html) { $("modalCard").innerHTML = html; $("modal").hidden = false; }
+function closeModal() { $("modal").hidden = true; wrap.focus({ preventScroll: true }); }
+$("modal").addEventListener("pointerdown", (e) => { if (e.target === $("modal")) closeModal(); });
+document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !$("modal").hidden) closeModal(); });
+function esc(s) { return String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]); }
+function showTextModal(title, text, filename) {
+  openModal(`<h2>${esc(title)}</h2><p>File saving is not available in this view. Copy the text below and save it as <b>${esc(filename)}</b> in any text editor.</p>
+    <textarea id="mText" readonly></textarea><div class="row"><button class="btn" id="mClose">Close</button><button class="btn primary" id="mCopy">Copy</button></div>`);
+  $("mText").value = text;
+  $("mClose").onclick = closeModal;
+  $("mCopy").onclick = () => {
+    const ta = $("mText");
+    navigator.clipboard.writeText(text).then(() => { toast("Copied"); dirtySinceFile = false; lastFileSave = new Date(); renderSaveState(); },
+      () => { ta.focus(); ta.select(); toast("Text selected. Press Ctrl+C to copy."); });
+  };
+}
+function showMessage(title, body) {
+  openModal(`<h2>${esc(title)}</h2><p>${esc(body)}</p><div class="row"><button class="btn primary" id="mClose">OK</button></div>`);
+  $("mClose").onclick = closeModal;
+}
+function showHelp() {
+  openModal(`<h2>Using Gridwork</h2><div class="help"><ul>
+    <li>Start a formula with <code>=</code>, for example <code>=B4-C4</code> or <code>=SUM(B4:B9)</code>. While typing a formula, click a cell to insert its address.</li>
+    <li>Operators: <code>+ - * / ^</code>, <code>&amp;</code> joins text, comparisons <code>= &lt;&gt; &lt; &gt; &lt;= &gt;=</code>, and <code>%</code>.</li>
+    <li>Functions: <code>SUM AVERAGE MIN MAX COUNT COUNTA ROUND ABS SQRT POWER INT MOD PI IF IFERROR AND OR NOT CONCAT LEN UPPER LOWER TRIM TODAY SUMIF COUNTIF</code></li>
+    <li><code>=SUMIF(A4:A9,"Gas",C4:C9)</code> adds column C where column A says Gas. <code>=COUNTIF(D4:D9,"&lt;0")</code> counts negatives.</li>
+    <li>Copy and paste moves formulas like Excel: <code>B4</code> shifts, <code>$B$4</code> stays put. You can paste straight from Excel or Google Sheets.</li>
+    <li>Keys: arrows move, Shift+arrows select, Enter or F2 edits, Delete clears, Ctrl+Z undo, Ctrl+B bold, Ctrl+S save JSON.</li>
+    <li>Drag the edge of a column letter to resize. On a phone, tap a cell twice to edit.</li>
+    <li>Your work autosaves in this browser. Use <b>Save JSON</b> to keep a real copy, and <b>Open</b> to load it back.</li>
+  </ul></div><div class="row"><button class="btn primary" id="mClose">Close</button></div>`);
+  $("mClose").onclick = closeModal;
+}
+
+// ---------- sample & boot ----------
+function sampleSheet() {
+  const c = {};
+  const put = (id, v, extra) => (c[id] = Object.assign({ v: String(v) }, extra || {}));
+  put("A1", "Monthly budget (example data)", { b: true });
+  ["Category", "Budget", "Actual", "Difference", "% used"].forEach((h, i) => put(colName(i) + "3", h, { b: true, a: i ? "r" : undefined }));
+  const rows = [["Mortgage", 1200, 1200], ["Groceries", 650, 712.4], ["Utilities", 280, 251.18], ["Gas", 220, 238], ["Insurance", 160, 160], ["Giving", 300, 300]];
+  rows.forEach(([cat, b, a], i) => {
+    const r = i + 4;
+    put("A" + r, cat); put("B" + r, b, { f: "cur" }); put("C" + r, a, { f: "cur" });
+    put("D" + r, `=B${r}-C${r}`, { f: "cur" }); put("E" + r, `=C${r}/B${r}`, { f: "pct" });
+  });
+  put("A11", "Total", { b: true });
+  put("B11", "=SUM(B4:B9)", { f: "cur", b: true }); put("C11", "=SUM(C4:C9)", { f: "cur", b: true });
+  put("D11", "=B11-C11", { f: "cur", b: true }); put("E11", "=C11/B11", { f: "pct", b: true });
+  put("A13", "Lines over budget"); put("B13", '=COUNTIF(D4:D9,"<0")');
+  put("A14", "Status"); put("B14", '=IF(D11>=0,"On track","Over budget")');
+  for (const k in c) if (c[k].a === undefined) delete c[k].a;
+  return { cells: c, widths: { A: 210, E: 80 }, name: "Monthly budget" };
+}
+function boot() {
+  buildGrid();
+  let loaded = null;
+  try { const s = localStorage.getItem(AUTO_KEY); if (s) loaded = JSON.parse(s); } catch {}
+  if (loaded && loaded.cells && Object.keys(loaded.cells).length) {
+    cells = loaded.cells; widths = loaded.widths || {}; $("docName").value = loaded.name || "Untitled sheet";
+    dirtySinceFile = !!loaded.dirty; lastFileSave = loaded.lastFileSave ? new Date(loaded.lastFileSave) : null;
+  } else {
+    const s = sampleSheet(); cells = s.cells; widths = s.widths; $("docName").value = s.name; dirtySinceFile = false;
+  }
+  applyWidths(); recalc(); renderCells(); renderSaveState();
+  setSel(0, 0); wrap.focus({ preventScroll: true });
+}
+window.addEventListener("resize", () => { if (editing && !ed.hidden) positionEditor(); });
+boot();
+})();
+</script>
+</body>
+</html>
