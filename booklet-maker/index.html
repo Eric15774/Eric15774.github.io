@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pocket Booklet Maker</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+<style>
+  :root { --ink:#222; --muted:#666; --line:#d8d4cc; --bg:#faf8f4; --accent:#5a4632; }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family: Georgia, "Times New Roman", serif; color:var(--ink); background:var(--bg); }
+  main { max-width: 640px; margin: 0 auto; padding: 40px 24px 60px; }
+  h1 { font-size: 28px; margin: 0 0 6px; }
+  .sub { color: var(--muted); margin: 0 0 28px; line-height:1.5; }
+  .drop { border: 2px dashed var(--line); border-radius: 10px; padding: 36px 20px; text-align:center; background:#fff; cursor:pointer; transition: border-color .15s; }
+  .drop.over { border-color: var(--accent); }
+  .drop strong { display:block; font-size:18px; margin-bottom:6px; }
+  .drop span { color: var(--muted); font-size: 14px; }
+  input[type=file] { display:none; }
+  #status { margin: 18px 0 0; min-height: 1.4em; line-height:1.5; }
+  .err { color: #a02c2c; }
+  button { font: inherit; font-size: 16px; padding: 10px 22px; border-radius: 8px; border: 0; background: var(--accent); color:#fff; cursor:pointer; margin-top: 14px; }
+  button:disabled { opacity:.4; cursor:default; }
+  h2 { font-size: 18px; margin: 36px 0 10px; }
+  ol { padding-left: 22px; line-height: 1.6; }
+  .note { font-size: 14px; color: var(--muted); line-height:1.5; }
+  table { border-collapse: collapse; font-size: 14px; margin-top: 6px; }
+  td, th { border: 1px solid var(--line); padding: 4px 10px; text-align:left; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Pocket Booklet Maker</h1>
+  <p class="sub">Turns a PDF of small booklet pages into a print-ready sheet with four pages on each side of letter paper, arranged so they come out in order once you cut, fold, and staple. Your file stays on your computer.</p>
+
+  <label class="drop" id="drop">
+    <strong>Drop your booklet PDF here</strong>
+    <span>or click to choose a file. In Word: File &gt; Save As &gt; PDF.</span>
+    <input type="file" id="file" accept="application/pdf">
+  </label>
+  <div id="status"></div>
+  <button id="save" disabled>Download print-ready PDF</button>
+
+  <h2>Printing and assembly</h2>
+  <ol>
+    <li>Print double-sided, <b>flip on long edge</b>, at <b>actual size</b>.</li>
+    <li>Trim the left and right edges at the marks, then cut each sheet in half across the middle.</li>
+    <li>Stack the half-sheets so the one showing the last page and page 1 is on top. The table below shows the order for your file.</li>
+    <li>Fold the stack so page 1 is on the front, and staple on the fold.</li>
+  </ol>
+  <div id="order"></div>
+  <p class="note">Pages can be up to 4.25 x 5.5 inches. If your page count isn't a multiple of 8, blank pages are added just before the back cover.</p>
+</main>
+<script>
+const LW = 612, LH = 792;
+let output = null, outName = "booklet_PRINT.pdf";
+const statusEl = document.getElementById("status");
+const saveBtn = document.getElementById("save");
+const say = (msg, err) => { statusEl.textContent = msg; statusEl.className = err ? "err" : ""; };
+
+// On claude.ai the page saves through Claude's downloads capability; anywhere else, a normal browser download.
+let downloads = null;
+(async () => {
+  try { if (window.claude && window.claude.use) downloads = await window.claude.use("downloads"); } catch (e) { downloads = null; }
+})();
+function browserSave(bytes, name) {
+  const url = URL.createObjectURL(new Blob([bytes], { type: "application/pdf" }));
+  const a = document.createElement("a");
+  a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 10000);
+}
+
+const drop = document.getElementById("drop");
+const input = document.getElementById("file");
+["dragenter","dragover"].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add("over"); }));
+["dragleave","drop"].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove("over"); }));
+drop.addEventListener("drop", e => { const f = e.dataTransfer.files[0]; if (f) handle(f); });
+input.addEventListener("change", () => { if (input.files[0]) handle(input.files[0]); });
+
+async function handle(file) {
+  output = null; saveBtn.disabled = true; document.getElementById("order").innerHTML = "";
+  say("Working on " + file.name + "...");
+  try {
+    const { PDFDocument, rgb } = PDFLib;
+    const src = await PDFDocument.load(await file.arrayBuffer());
+    let n = src.getPageCount();
+    const { width: pw, height: ph } = src.getPage(0).getSize();
+    if (pw > 308 || ph > 398) { say(`Pages are ${(pw/72).toFixed(2)} x ${(ph/72).toFixed(2)} in. They need to be 4.25 x 5.5 in or smaller.`, true); return; }
+    const out = await PDFDocument.create();
+    const embedded = await out.embedPages(src.getPages());
+    // order of pages; pad with blanks before the back cover
+    const order = embedded.map((p, i) => i);
+    const N = Math.ceil(n / 8) * 8, pad = N - n;
+    for (let i = 0; i < pad; i++) order.splice(order.length - 1, 0, null);
+    const L = N / 8;
+    const x0 = (LW - 2 * pw) / 2, y0 = (LH - 2 * ph) / 2;
+    const sides = k => [[N - 2*k, 2*k + 1], [2*k + 2, N - 2*k - 1]];
+    const rows = [];
+    for (let k = 0; k < 2 * L; k++) rows.push(sides(k)[0]);
+    for (let j = 0; j < L; j++) {
+      const top = sides(j), bot = sides(j + L);
+      for (let s = 0; s < 2; s++) {
+        const page = out.addPage([LW, LH]);
+        [[0, top[s]], [1, bot[s]]].forEach(([row, pair]) => pair.forEach((pno, col) => {
+          const idx = order[pno - 1];
+          if (idx !== null) page.drawPage(embedded[idx], { x: x0 + col * pw, y: y0 + (1 - row) * ph });
+        }));
+        if (s === 0) marks(page, rgb(0.35, 0.35, 0.35), x0, y0, pw, ph);
+      }
+    }
+    output = await out.save();
+    outName = file.name.replace(/\.pdf$/i, "") + "_PRINT.pdf";
+    say(`Done: ${n} pages${pad ? ` plus ${pad} blank` : ""}, on ${L} sheet${L > 1 ? "s" : ""} of letter paper.`);
+    saveBtn.disabled = false;
+    // stacking table (labels use the original page numbers; blanks shown as "blank")
+    const label = p => order[p - 1] === null ? "blank" : String(order[p - 1] + 1);
+    const tr = rows.map((pr, i) => `<tr><td>${i + 1}${i === 0 ? " (top)" : i === rows.length - 1 ? " (bottom)" : ""}</td><td>${label(pr[0])} and ${label(pr[1])}</td></tr>`).join("");
+    document.getElementById("order").innerHTML = `<table><tr><th>Stack</th><th>Half-sheet showing pages</th></tr>${tr}</table>`;
+  } catch (e) {
+    say("Couldn't read that PDF: " + (e.message || e), true);
+  }
+}
+
+function marks(page, c, x0, y0, pw, ph) {
+  const t = 0.5, line = (a, b, x2, y2) => page.drawLine({ start: { x: a, y: b }, end: { x: x2, y: y2 }, thickness: t, color: c });
+  const mid = y0 + ph;
+  for (const x of [x0, x0 + 2 * pw]) {
+    for (const [a, b] of [[LH - 34, LH - 16], [mid + 8, mid + 26], [mid - 8, mid - 26], [16, 34]]) line(x, a, x, b);
+  }
+  line(x0 - 8, mid, Math.max(4, x0 - 30), mid);
+  line(x0 + 2 * pw + 8, mid, Math.min(LW - 4, x0 + 2 * pw + 30), mid);
+}
+
+saveBtn.addEventListener("click", async () => {
+  if (!output) return;
+  if (!downloads) { browserSave(output, outName); say("Saved " + outName + "."); return; }
+  try {
+    await downloads.save({ filename: outName, data: new Blob([output], { type: "application/pdf" }) });
+    say("Saved " + outName + ".");
+  } catch (e) {
+    if (e && e.code === "declined") say("Download canceled.");
+    else if (e && e.code === "rate_limited") say("A download prompt is already open. Try again in a moment.", true);
+    else say("The download didn't go through" + (e && e.message ? ": " + e.message : "."), true);
+  }
+});
+</script>
+</body>
+</html>

@@ -17,8 +17,10 @@ Live preview: **https://eric15774.github.io**
 │   └── index.html      CDL course page
 ├── robotics/
 │   └── index.html      Robotics course page (placeholder)
-└── links/
-    └── index.html      Useful links (weather, news, education, etc.)
+├── links/
+│   └── index.html      Useful links (weather, news, education, etc.)
+└── booklet-maker/
+    └── index.html      Pocket Booklet Maker: lays out a small-page PDF 4-up for saddle-stitch printing
 ```
 
 ---
