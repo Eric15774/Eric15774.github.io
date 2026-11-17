@@ -19,9 +19,20 @@ Live preview: **https://eric15774.github.io**
 │   └── index.html      Robotics course page (placeholder)
 ├── links/
 │   └── index.html      Useful links (weather, news, education, etc.)
+├── gridwork/
+│   └── index.html      Gridwork spreadsheet app
 └── booklet-maker/
     └── index.html      Pocket Booklet Maker: lays out a small-page PDF 4-up for saddle-stitch printing
 ```
+
+---
+
+## Tools
+
+| Tool | Link | What it does |
+|---|---|---|
+| Gridwork | [eric15774.github.io/gridwork](https://eric15774.github.io/gridwork/) | Browser-based spreadsheet app |
+| Pocket Booklet Maker | [eric15774.github.io/booklet-maker](https://eric15774.github.io/booklet-maker/) | Lays out a small-page PDF four to a side of letter paper for a folded, stapled booklet |
 
 ---
 
